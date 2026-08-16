@@ -1,0 +1,16 @@
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "node:path";
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: { "@": path.resolve(import.meta.dirname, "./src") },
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./vitest.setup.ts"],
+    // e2e/ is Playwright's; it must never be picked up by Vitest.
+    include: ["src/**/*.test.{ts,tsx}"],
+  },
+});

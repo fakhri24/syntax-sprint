@@ -1,0 +1,163 @@
+# PLAN.md - Implementation Roadmap
+
+## Milestone 1: Engine Foundation & Hard-Lock Keystroke Logic (Week 1)
+- [x] **Task 1.1: Project Scaffolding & Setup**
+  - [x] Initialize Next.js App Router with TypeScript, Tailwind CSS, Vitest, and Playwright.
+  - [x] Setup Firebase client configuration (`src/lib/firebase.ts`) for Google Auth and Firestore.
+  - [x] Setup Admin SDK (`src/lib/firebaseAdmin.ts`), server-only — `server-only` import plus an ESLint `no-restricted-imports` rule scoped to `src/components/**` and `src/engine/**`.
+  - [x] Transcribe the §4.8 schema and §4.1–§4.5 runtime types into `src/types/`.
+  - [x] `.env.example` manifest per §4.14; `.gitignore` un-ignores it.
+  - [x] Create the Firebase project and fill `.env.local` — verified live by `npm run check:env`.
+  - [x] `npx playwright install chromium` — Firefox and WebKit still absent (see Task 1.2).
+- [x] **Task 1.2: Input Normalization Layer**
+  - [x] Build `src/engine/input.ts` per AGENTS.md §4.1: characters from `beforeinput` (`insertText`, single-character `data` only), control keys from `keydown`, all input ignored while `isComposing`.
+  - [x] `preventDefault` on `Tab`, `paste`, and `drop`; discard `insertFromPaste` / `insertFromDrop` without counting an error.
+  - [x] Ignore the `beforeinput` twins of Enter/Backspace (`insertLineBreak`, `deleteContentBackward`) so newlines cannot double-count.
+  - [x] Vitest: 25 cases over the full decision table, plus controller wiring in jsdom.
+  - [x] Playwright specs at `/dev/input-probe` (dev-only route): brace/bracket characters, Tab focus retention, modifier keys, paste rejection, dead-key sequence, and IME composition via CDP.
+  - [ ] Run the suite on Firefox and WebKit (`npx playwright install firefox webkit`) — only Chromium is installed locally.
+- [x] **Task 1.3: Newline & Indentation Model**
+  - [x] Build `src/engine/layout.ts` implementing the auto-skip rules in §4.2: `Enter` at end-of-line advances past `\n`, leading whitespace, and blank lines atomically.
+  - [x] Compute `billableLength` from the same traversal the runtime cursor uses, so the §4.6 invariant `intervals.length === billableLength` holds by construction.
+  - [x] `buildSkipMask` for the dimmed-indentation render state (§4.11).
+  - [x] `normalizeSnippet` (CRLF, trailing whitespace, trailing newlines) and `validateSnippet` for seed-time authoring checks — mid-line tabs are rejected rather than silently rewritten.
+  - [x] Fixture coverage: deeply nested CSS, an SVG attribute block, and a JS snippet with blank lines between functions. 30 cases.
+- [x] **Task 1.4: Hard-Lock Keystroke Engine**
+  - [x] Implement FSM (`IDLE` -> `RUNNING` -> `FINISHED`) in `src/engine/fsm.ts`, with illegal transitions throwing and elapsed time frozen at the final keystroke.
+  - [x] Clock starts on the **first keystroke** (including a wrong one), not on mount — so reading time is never charged. Consequence for telemetry recorded in §4.6: `intervals[0] === 0`.
+  - [x] Build `src/engine/keystroke.ts` as a pure reducer with strict Backspace-only unlock, at most one outstanding error character, and `Backspace` as a **no-op** when unlocked (correct characters are never deletable — progress is monotonic).
+  - [x] Implement the error accounting split from §4.3: `totalErrors` counts lock *transitions*, `blockedKeystrokes` counts every rejected input.
+  - [x] Effects (`accepted` / `completed` / `error` / `blocked` / `unlocked` / `noop`) returned per step, so audio, shake, and telemetry all key off one signal.
+  - [x] Vitest suites: multiline indentation, mashing-while-locked (exactly one `totalErrors` increment), over-backspacing at an unlocked cursor, character-at-end-of-line, Enter-mid-line, input after completion, and state immutability. 30 cases.
+- [x] **Task 1.5: Metrics Engine**
+  - [x] Implement the error-penalized formulas from §4.5 in `src/engine/metrics.ts` as pure functions with **no DOM or browser dependency**, so `server/verifyRun.ts` can import them verbatim.
+  - [x] `metricsFromTelemetry(intervals, errorOffsets)` — the server-side reconstruction path, sharing the same formulas.
+  - [x] Unit-test the collapse case explicitly: a perfect run gives `netWpm === grossWpm`, and each typo costs exactly one word-per-minute-equivalent.
+  - [x] Assert WPM is computed against `billableLength`, so indentation depth does not inflate scores.
+  - [x] Export `NET_WPM_LABEL` so the UI cannot accidentally present it as standard Net WPM.
+  - [x] `useLiveMetrics` drives the speedometer at refresh rate **without `setState`** — it computes per frame and hands the result to a DOM-ref writer, per §4.11.
+- [x] **Task 1.6: Keystroke Telemetry Recorder**
+  - [x] Build `src/engine/telemetry.ts` recording ms deltas between accepted keystrokes and the `cursorIndex` of each error transition.
+  - [x] `recordStep` as the single wiring point from a reducer step, so blocked keypresses and no-ops leave no trace.
+  - [x] `validateTelemetry` shared by client and server: interval count, `intervals[0] === 0`, finite non-negative timings, error offsets inside `targetCode` and non-decreasing.
+  - [x] Enforce the 1,000-billable-character snippet cap so payloads stay bounded.
+  - [x] End-to-end test: a recorded run with a typo validates clean and lets `metricsFromTelemetry` reach the client's own counts without being told them.
+- [x] **Task 1.7: Typing Interface Component**
+  - [x] Build syntax-highlighted code viewport with smooth caret positioning and error-shake animations.
+  - [x] Render auto-skipped indentation as visually inert (dimmed) so players can see it is not theirs to type.
+  - [x] `charStates.ts` holds the update rule as pure functions, so the §4.11 performance contract is testable without layout.
+  - [x] Snippet DOM built once via a referentially stable `useMemo`; a keystroke writes at most two `data-state` attributes and one caret transform.
+  - [x] Caret positions measured once at mount and on `ResizeObserver`, never during typing.
+  - [ ] Playwright spec for real caret geometry — jsdom has no layout, so caret positioning is currently unverified.
+
+---
+
+## Milestone 2: Live Code Sandbox & Starter Levels (Week 2)
+- [x] **Task 2.1: Declarative Stage (CSS / SVG)**
+  - [x] Build `ShadowDOMStage.tsx` for real-time CSS and SVG injection on every accepted keystroke.
+  - [x] Sink resolution: a snippet may nominate `[data-sink]`; otherwise CSS gets a generated `<style>` and SVG writes into the stage's `<svg>` root.
+  - [x] Verify that partial/invalid tokens degrade silently via browser error recovery and never throw into the host app — proven in Chromium at `/dev/stage-probe`, stepping every prefix of both a CSS and an SVG snippet with a `window.onerror` listener attached. jsdom cannot establish this; its CSS parser is stricter than a browser's.
+  - [x] Playwright also asserts the real payoff: a rule applies only once syntactically complete, and the stage's stylesheet never reaches a `.rocket` in the host document.
+- [x] **Task 2.2: Checkpoint Executor (JavaScript)**
+  - [x] Build `src/engine/checkpoints.ts` on acorn, emitting `node.end` for each top-level statement; `latestCheckpointAt` drives re-execution. `validateJavaScript` is the seed-time gate.
+  - [x] Build `IframeSandbox.tsx` (`sandbox="allow-scripts"`, no `allow-same-origin`) that re-executes the full prefix **only when the cursor crosses a checkpoint**, in a freshly reset iframe document each time.
+  - [x] Implement bidirectional `postMessage` protocol: parent sends `EXEC`, iframe replies `ACK` / `ERROR`. Messages are authenticated by `event.source`, since an opaque origin cannot be named.
+  - [x] `srcdoc` is attached after mount, not during SSR — otherwise the frame loads before hydration attaches `onLoad` and the handshake is missed.
+  - [x] Playwright at `/dev/sandbox-probe`: checkpoint gating, document reset between runs, re-running a `const` declaration, runtime error reporting, and a proof that the frame cannot reach `parent.document`.
+- [x] **Task 2.3: Runaway-Loop Containment**
+  - [x] Build `src/engine/loopGuard.ts` on acorn + magic-string, instrumenting every loop form (`for` / `for-in` / `for-of` / `while` / `do-while`, braced or not) with a 100k-iteration budget that throws when exceeded.
+  - [x] Instrumentation is **unconditional** — see the finding below.
+  - [x] Implement the parent-side 750ms `ACK` watchdog with quarantine, so a prefix that failed to answer is not retried into the same failure.
+  - [x] **Finding: the watchdog cannot rescue a synchronous spin.** A `srcdoc` iframe has no separate URL to isolate on, so Chromium keeps it on the parent's main thread; a spin freezes the parent and its timer alongside it. Measured directly — the parent's own interval stopped ticking and `page.evaluate` never returned. AGENTS.md §4.4 rewritten to state this, and the guard's opt-out removed as a result.
+  - [x] Playwright: every loop form caught, a 50k-iteration loop still completing, and infinite recursion self-terminating as a `RangeError`. There is deliberately **no** test that spins an unguarded frame — it would freeze the page it asserts against.
+- [x] **Task 2.4: Curated Starter Level Manifests**
+  - [x] Author manifests in `content/snippets/` as the single source of truth (never authored through the app). A manifest holds only hand-written fields; everything derived is computed at seed time so the two cannot drift.
+  - [x] `src/engine/snippet.ts` — `validateManifest` / `prepareSnippet`, pure and Shiki-free so the whole pipeline is testable offline. Reports every problem in one pass rather than the first.
+  - [x] Build `scripts/seedSnippets.ts` (`npm run seed:snippets`, `--dry-run` to validate without writing) precomputing `billableLength`, JS `checkpoints`, and Shiki `tokens`, writing in a single batch so the collection is never half-updated.
+  - [x] `src/engine/highlight.ts` flattens Shiki's per-line tokens to offset ranges and **verifies each token against the source** — a bad offset would tint a whole level wrongly and read as a rendering bug.
+  - [x] **Level 1 (CSS):** rocket launch — 125 billable, 44 tokens.
+  - [x] **Level 2 (SVG):** digital badge — 205 billable, 54 tokens.
+  - [x] **Level 3 (JavaScript):** interactive card — 256 billable, 51 tokens, 4 checkpoints.
+  - [x] Seeded to Firestore and read back to confirm field shape, derived values, and that stored code is normalized.
+- [x] **Task 2.5: Low-Latency Audio Engine**
+  - [x] Build Web Audio API sound generator for mechanical keyboard switches and error thuds — fully synthesized, so no sample fetch gates the first keystroke.
+  - [x] Three switch profiles (`linear` / `tactile` / `clicky`) plus per-keystroke detune, so a fast run does not sound like a machine gun.
+  - [x] `latencyHint: "interactive"`, context created lazily on the first `resume()` because browsers reject audio started outside a gesture.
+  - [x] Every method swallows its own errors: audio is decoration and must never cost the player a keystroke. Falls back to a silent engine where Web Audio is absent, so callers need no null checks.
+  - [x] `soundForEffect` maps reducer effects to sounds in one place; `blocked` re-triggers the thud, matching the shake (§4.3).
+  - [x] Injectable context factory so the graph is unit-testable in jsdom, which has no Web Audio API.
+
+---
+
+## Milestone 3: Auth, Server-Authoritative Scoring & Leaderboard (Week 3)
+- [x] **Task 3.1: Google Authentication & Practice Mode**
+  - [x] Implement Google OAuth login via Firebase Auth, with an automatic redirect fallback when the popup is blocked. Cancelling the popup is treated as a change of mind, not an error.
+  - [x] **The game loop is open to guests.** `AuthProvider` treats signed-out as a normal state; nothing gates the arena.
+  - [x] `ScoringNotice` states whether *this* run will count, **before** it starts, and offers inline sign-in so the player need not leave the level. `canSubmitRuns("loading")` is false, so a still-loading session never promises scoring it cannot deliver.
+  - [x] `AuthBadge` session indicator; `/login` explains that signing in is only for submitting scores.
+  - [ ] Create the `users/{uid}` profile document on first sign-in — deferred until Task 3.2 deploys rules, since a new database denies all client writes.
+- [x] **Task 3.2: Firestore Security Rules**
+  - [x] `snippets`: public read, **all client writes denied**.
+  - [x] `runs`: public read, **client `create` / `update` / `delete` denied** — the server is the only writer.
+  - [x] `leaderboardEntries` / `globalEntries`: public read, **all client writes denied**.
+  - [x] `runTokens`: denied for **read** as well as write — an unredeemed nonce is most of what forging a run needs (§4.13).
+  - [x] `users/{uid}`: owner-only writes, field allowlist plus type and length checks, `createdAt` immutable, deletion denied.
+  - [x] 24 emulator tests asserting direct client writes to `runs`, `snippets`, and both leaderboard collections all fail. This is the test that keeps the trust boundary from silently regressing.
+  - [x] `npm run test:rules` runs them against a throwaway emulator on a distinct project id, kept out of `npm test` so the fast suite never depends on a JVM.
+  - [ ] Deploy to the live project — held back deliberately until the rules were verified; the database denies everything by default meanwhile, so nothing is exposed.
+- [x] **Task 3.3: Run Tokens & Verification Endpoint**
+  - [x] Build `POST /api/runs/start` in `src/server/runToken.ts`: verify the ID token, issue a single-use signed token binding `{ uid, snippetId, serverStartMs, nonce }`. The snippet is checked to exist here, so a bad id fails before the player types rather than after.
+  - [x] Build `POST /api/runs/submit` accepting the `RunSubmission` telemetry payload (§4.6) — never client-computed scores.
+  - [x] Build `src/server/verifyRun.ts` recomputing every metric from `intervals` + `errorOffsets` using the shared `metrics.ts`. Pure and clock-free, so it is exhaustively testable; a test proves an inflated `grossWpm` in the body changes the result not at all.
+  - [x] Structural checks: token valid and unredeemed, `intervals.length === billableLength`, `sum(intervals)` matches `clientElapsedMs` within tolerance and is consistent with `now - serverStartMs`, `errorOffsets` in range and non-decreasing.
+  - [x] Reject recomputed `grossWpm > 250`; persist with server `createdAt`, `verified`, and `flags`.
+  - [x] Never trust a `userId` from the request body — `src/server/auth.ts` takes it from the verified ID token only, and a token signed for another uid is rejected with 403.
+  - [x] Redemption and the run write share one transaction, so a token cannot be spent twice even under concurrent submissions — proven in the emulator with two parallel redemptions, exactly one of which wins.
+- [x] **Task 3.4: Best-Per-User Leaderboard Aggregates**
+  - [x] Build `src/server/leaderboard.ts` updating `leaderboardEntries/{snippetId}__{uid}` and `globalEntries/{uid}` in the **same transaction** as the run write, only when the run is `verified` and beats the stored `netWpm`. The decision is a pure function, so the rule is testable without a database.
+  - [x] **Firestore requires every read in a transaction before any write**, so `redeemRunToken` was split into `assertRedeemable` (read + validate) and `markRedeemed` (write). Reading the aggregates after redeeming would have thrown at runtime.
+  - [x] Denormalize `displayName` / `photoURL` onto entries so leaderboard reads never fan out to `users`; a rename refreshes on the player's next personal best.
+  - [x] Build snippet-level and global Top-100 views querying the aggregate collections (never `runs`), sorted by `netWpm`. Collection names live in `src/lib/collections.ts` so client queries never import a server module.
+  - [x] Create the required composite index (`snippetId ASC, netWpm DESC`) in `firestore.indexes.json` **now**, alongside the query.
+  - [x] Emulator tests: six runs from one player collapse to a single row, a flagged 249 WPM run never reaches the board, snippet and global bests move independently, and a crowded board ranks correctly.
+  - [x] Submit response reports `personalBest`, so the completion screen needs no extra read.
+  - [ ] Optional real-time `onSnapshot` listeners — deferred; measure read cost first, as §4.7 notes.
+
+---
+
+## Milestone 4: Anti-Cheat Heuristics, Polish & Production Release (Week 4)
+- [x] **Task 4.1: Timing Heuristics & Flagging**
+  - [x] Layer statistical checks onto the Milestone 3 verifier: `low-variance` (coefficient of variation, not raw deviation — deviation scales with typing speed, so a fixed floor would punish fast honest players), `sub-8ms-window`, and `quantized-intervals`.
+  - [x] **`intervals[0]` is excluded from every check**, since it is defined as 0 (§4.6). Including it would flag the opening of every honest run.
+  - [x] Distribution checks require ≥20 samples, so short levels are not flagged for being short. An impossible burst is still caught at any length.
+  - [x] Flag-only, never rejecting — suspicion is not proof, and a flagged run is stored but kept off the aggregates.
+  - [x] `GET/POST /api/admin/flagged` lists flagged runs and promotes false positives back through the same `decideUpdates`, so a promoted run still only takes a slot if it genuinely beats the player's best. Admins come from `ADMIN_UIDS` and the surface fails closed and 404s rather than confirming it exists.
+  - [ ] **Tune thresholds against a corpus of real recorded runs.** The current values are estimates validated only against synthetic fixtures; they must not drive rejection until real play data exists.
+- [x] **Task 4.2: Device Gating**
+  - [x] Build the `KeyboardGate` interstitial per §4.9: no-fine-pointer or sub-1024px viewports get an explanatory screen linking to the leaderboard, never a broken arena. The two causes are explained differently, since widening a window is a fix and a missing keyboard is not.
+  - [x] Provide the "enter anyway" escape hatch for detached-keyboard tablets, remembered for the session; the screen states that such runs score normally.
+  - [x] **No web API reports whether a keyboard is attached** — pointer and width are proxies, which is exactly why the hatch exists rather than a verdict.
+  - [x] Renders nothing until signals resolve, so neither the gate nor the arena flashes on load; re-evaluates on resize so someone who widened their browser is not left stranded.
+  - [x] Survives `sessionStorage` throwing under private browsing: the override is forgotten, not fatal.
+  - [x] Keep login, leaderboard, and marketing routes fully responsive — the gate wraps only the arena.
+- [x] **Task 4.3: The Arena**
+  - [x] `runStore` (Zustand, one per mount) keeps the keystroke path out of React's render cycle; the editor and stage subscribe to the cursor alone.
+  - [x] `useRunSubmission` reserves the run token **on mount, not at completion** — by completion it is too late, and the player would have earned a score they cannot keep. A failed reservation degrades to practice mode rather than blocking the level.
+  - [x] `Arena` wires input → reducer → telemetry → viewport, stage, and audio; `/play/[id]` reads the snippet server-side so the first paint already has the code.
+  - [x] Completion summary shows local numbers immediately and replaces them with the server's once they arrive, with distinct states for practice, pending, failed, and personal best.
+  - [x] Split-screen layout, mute toggle, restart.
+  - [x] Eight Playwright specs proving the parts compose: a full CSS level typed to completion, the live stage responding, hard-lock and Backspace release, indentation never typed, the JS level running in its sandbox, and a clean restart. Run 3× with no flakes.
+  - [ ] WPM chart on the completion screen — not built; the summary shows final figures only.
+  - [x] **Visual design.** Direction: risograph duplicator print — chosen because the process matches the mechanic (a riso image builds one ink pass at a time, as the stage builds one token at a time). Paper ground rather than a dark IDE, so the live stage is the one lit surface, inverting the usual dark-editor relationship.
+    - [x] Tokens in `globals.css`: riso spot inks (paper / ink / federal blue / fluoro pink / riso green), Archivo at 125% width for display, IBM Plex Sans + Plex Mono as one superfamily for UI and code.
+    - [x] **Signature — typing prints the page.** Untyped code is a pale ghost impression; each correct keystroke prints it in full ink with its syntax colour. Progress is the page filling in, not a bar elsewhere. Reuses the `data-state` attributes from Task 1.7 at no runtime cost.
+    - [x] Block caret one character cell wide, misregistration shake on error, offset block shadows as second impressions.
+    - [x] Applied across level select, arena, leaderboard, login, gate, and completion sheet; copy rewritten throughout.
+    - [x] Verified by screenshot at 1440px and 390px; four layout defects found and fixed that way (stage rendering as a narrow strip, code clipping horizontally, the scoring notice wrapping to four lines, a highlight that read as strikethrough).
+- [~] **Task 4.4: Deployment** — prepared and blocked on account access; see `DEPLOY.md`.
+  - [x] `scripts/deployFirestore.ts` (`npm run deploy:firestore`) releases rules, creates indexes, and configures the TTL policy using the service account already in `.env.local` — no CLI login, so it works in CI. Supports `--dry-run` and `--only=rules,indexes,ttl`.
+  - [x] Rules **compile** against the live project (verified twice).
+  - [ ] **Rules release, index creation, and TTL are blocked by IAM.** The `firebase-adminsdk` service account is provisioned for the data plane only: `firebaserules.releases.create` and index management both return 403. Fix by either `firebase login && firebase deploy --only firestore`, or granting `roles/firebaserules.admin` + `roles/datastore.indexAdmin` (the latter is what CI needs).
+  - [x] **Confirmed the live database is still in full lockdown** (`allow read, write: if false`). Consequence: the arena works, because `/play/[id]` reads server-side through the Admin SDK; the leaderboard does not, because it reads through the client SDK. Nothing is exposed — lockdown is stricter than our rules, not looser.
+  - [ ] Deploy the frontend to Vercel — needs the account.
+  - [x] `DEPLOY.md`: both IAM paths, the env var split with a fresh `RUN_TOKEN_SECRET`, authorizing the production domain for Google sign-in, and a pre-flight checklist.

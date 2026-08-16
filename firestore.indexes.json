@@ -1,0 +1,23 @@
+{
+  "indexes": [
+    {
+      "//": "Snippet leaderboard: entries for one level, ranked (PLAN 3.4).",
+      "collectionGroup": "leaderboardEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "snippetId", "order": "ASCENDING" },
+        { "fieldPath": "netWpm", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "Flagged-run review queue: newest first (PLAN 4.1). Missing this made GET /api/admin/flagged fail with FAILED_PRECONDITION.",
+      "collectionGroup": "runs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "verified", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

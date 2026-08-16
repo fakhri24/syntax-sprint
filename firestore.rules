@@ -1,0 +1,79 @@
+rules_version = '2';
+
+// Security rules for Syntax Sprint (AGENTS.md §4.10).
+//
+// The governing idea: the client is a display layer. It may read almost
+// everything and write almost nothing. Scores, snippets, and leaderboard
+// aggregates are written exclusively by the server through the Admin SDK, which
+// bypasses these rules entirely — so "deny" here costs the app nothing and is
+// the only thing standing between a leaderboard and a POST request.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // A profile may carry these fields and nothing else. hasOnly bounds what a
+    // client can invent; hasAll stops it omitting fields the app expects.
+    function isValidProfile(uid, data) {
+      return data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'createdAt'])
+        && data.keys().hasAll(['uid', 'displayName', 'email', 'photoURL', 'createdAt'])
+        && data.uid == uid
+        && data.displayName is string && data.displayName.size() <= 100
+        && data.email is string && data.email.size() <= 320
+        && data.photoURL is string && data.photoURL.size() <= 2048
+        && data.createdAt is int;
+    }
+
+    // Curated content, seeded by scripts/seedSnippets.ts (invariant #4).
+    match /snippets/{snippetId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Written only by POST /api/runs/submit after server-side verification
+    // (§4.6). A client that could write here could write its own score.
+    match /runs/{runId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Best-per-user aggregates, maintained in the same transaction as the run
+    // (§4.7). Client-writable aggregates would make the run verification moot.
+    match /leaderboardEntries/{entryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /globalEntries/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Single-use run tokens (§4.13). Not merely unwritable — unreadable too,
+    // since knowing an unredeemed nonce is most of what forging a run needs.
+    match /runTokens/{nonce} {
+      allow read, write: if false;
+    }
+
+    // The one collection a client may write, and only its own document.
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if isOwner(uid) && isValidProfile(uid, request.resource.data);
+      // createdAt is immutable: it is the account's age, not a client's opinion.
+      allow update: if isOwner(uid)
+        && isValidProfile(uid, request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    // Explicit denial for any collection added later without its own rule.
+    // Firestore already defaults to deny; this states the intent so a new
+    // collection is never silently assumed safe.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,117 @@
+/* ============================================================================
+   The signature: typing prints the page.
+   ----------------------------------------------------------------------------
+   Untyped code is a ghost impression — the plate loaded but not yet run.
+   Each correct keystroke prints that character in full ink. Progress is not a
+   bar somewhere else on screen; it is the page filling in.
+   ========================================================================= */
+
+.viewport {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+  line-height: var(--line);
+  white-space: pre;
+  tab-size: 2;
+
+  padding: 1.5rem 1.5rem 1.5rem 1.75rem;
+  background: var(--color-paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-press);
+  overflow-x: auto;
+}
+
+/* The stock the page is printed on: a hairline margin rule, like a legal pad. */
+.viewport::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0.75rem;
+  width: 1px;
+  background: color-mix(in srgb, var(--color-fluoro) 45%, transparent);
+}
+
+.char {
+  /* Token colour arrives precomputed from Shiki (§4.11); it is revealed rather
+     than applied, so an untyped character has the shape but not the ink. */
+  color: var(--tok-light, currentColor);
+  transition: color 110ms ease-out;
+}
+
+/* Not yet printed. Uniformly pale, so the eye reads shape, not syntax — the
+   colour is the reward for typing it. */
+.char[data-state="pending"] {
+  color: var(--color-ghost);
+}
+
+/* Printed. Full ink, and the token colour finally shows. */
+.char[data-state="typed"] {
+  color: var(--tok-light, var(--color-ink));
+  font-weight: 500;
+}
+
+/* Auto-skipped indentation (§4.2): present, structural, and visibly not the
+   player's to type — a faint blue plate that never gets its ink pass. */
+.char[data-state="skipped"] {
+  color: color-mix(in srgb, var(--color-federal) 22%, transparent);
+}
+
+/* A misregistered impression: the wrong plate, printed in the loud ink. */
+.char[data-state="error"] {
+  color: var(--color-paper);
+  background: var(--color-fluoro);
+  font-weight: 600;
+  box-shadow: 0 0 0 2px var(--color-fluoro);
+}
+
+/* A block caret, one character cell wide: the press head sitting over the next
+   cell to print, rather than a hairline between two of them. */
+.caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell);
+  background: var(--color-federal);
+  mix-blend-mode: multiply;
+  will-change: transform;
+  transition: transform 70ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  pointer-events: none;
+}
+
+.caret[data-error="true"] {
+  background: var(--color-fluoro);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    transition: none;
+  }
+}
+
+/* Misregistration: the whole sheet jolts out of alignment for a moment. Runs on
+   the container, so it cannot force a style recalculation per character (§4.11). */
+.shake {
+  animation: misregister 150ms steps(3, end);
+}
+
+@keyframes misregister {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-3px, 1px);
+  }
+  66% {
+    transform: translate(2px, -1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shake {
+    animation: none;
+  }
+}

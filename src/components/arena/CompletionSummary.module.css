@@ -1,0 +1,87 @@
+/* The proof sheet: what came off the press. */
+.summary {
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-press);
+  background: var(--color-paper);
+  padding: 1.5rem;
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  border: var(--rule);
+}
+
+.figure {
+  background: var(--color-paper);
+  padding: 1rem;
+}
+
+.figure dt {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+  margin-bottom: 0.35rem;
+}
+
+.figure dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-stretch: 118%;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Net WPM is the ranked figure, so it gets the ink. */
+.figure[data-lead="true"] dd {
+  color: var(--color-federal);
+}
+
+.status {
+  margin-top: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.status[data-tone="best"] {
+  color: var(--color-riso-green);
+  font-weight: 600;
+}
+
+.status[data-tone="problem"] {
+  color: var(--color-fluoro);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: var(--rule);
+}
+
+.actions a {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

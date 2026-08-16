@@ -1,0 +1,62 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.avatar {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+}
+
+.placeholder {
+  display: inline-block;
+  width: 8rem;
+  height: 2.25rem;
+}
+
+/* Whether this run counts, stated before it starts. Colour carries the answer
+   so it reads at a glance mid-game, not just on close reading. */
+.notice {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--color-ghost);
+  max-width: 62ch;
+}
+
+.notice[data-scoring="yes"] {
+  border-color: var(--color-riso-green);
+  color: var(--color-riso-green);
+}
+
+.notice[data-scoring="no"] {
+  border-color: var(--color-fluoro);
+}
+
+.inlineButton {
+  font: inherit;
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  color: var(--color-federal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.inlineButton:hover {
+  background: none;
+  color: var(--color-fluoro);
+}
+
+.inlineButton:active {
+  transform: none;
+}

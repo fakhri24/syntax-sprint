@@ -1,0 +1,29 @@
+.gate {
+  width: min(34rem, 100% - 3rem);
+  margin: clamp(3rem, 12vh, 8rem) auto;
+  padding: 2rem;
+  background: var(--color-paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--color-fluoro);
+}
+
+.body {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 1.125rem;
+}
+
+.actions {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.footnote {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--color-ink) 62%, transparent);
+}

@@ -1,0 +1,39 @@
+.panel {
+  width: min(34rem, 100% - 3rem);
+  margin: clamp(3rem, 10vh, 7rem) auto;
+  padding: 2rem;
+  background: var(--color-paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--color-federal);
+}
+
+.body {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+/* The rule that costs people runs, so it is the one thing set apart. */
+.warning {
+  border-left: 3px solid var(--color-fluoro);
+  padding-left: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.actions {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.error {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-fluoro);
+}

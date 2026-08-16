@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Syntax Sprint — design tokens
+   ----------------------------------------------------------------------------
+   The material is risograph duplicator printing, chosen because the process
+   matches the mechanic: a riso image is built one ink pass at a time, and this
+   game builds its stage one token at a time. Untyped code is a ghost impression;
+   typing prints it.
+
+   The ground is paper, not a dark IDE. The live stage is the dark, glowing
+   thing — inverting the usual "dark editor, bright preview" relationship so the
+   payoff is what shines.
+   ========================================================================= */
+
+@theme {
+  /* Riso spot inks. Named for the material, not for their role, so a colour is
+     never quietly repurposed into meaning something else. */
+  --color-paper: #eaece6;
+  --color-paper-deep: #dfe2da;
+  --color-ink: #161a1d;
+  --color-federal: #1b2a82;
+  --color-fluoro: #ff4a8d;
+  --color-riso-green: #00a95c;
+
+  /* Ghost impression: the plate that has not been printed yet. */
+  --color-ghost: #a9b0ae;
+
+  --font-display: var(--font-archivo);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+}
+
+:root {
+  /* Everything in the editor measures in character cells, because that is the
+     real structural unit of code. */
+  --cell: 1ch;
+  --line: 1.75;
+
+  --rule: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+  --rule-strong: 2px solid var(--color-ink);
+
+  --shadow-press: 3px 3px 0 var(--color-ink);
+  --radius: 2px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-paper);
+  /* Duplicator paper has tooth. A single faint grid, aligned to nothing in
+     particular, reads as an engineering pad rather than a texture overlay. */
+  background-image: linear-gradient(
+      color-mix(in srgb, var(--color-ink) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-ink) 4%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- typography */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* Archivo's width axis, pushed wide: the masthead of a printed sheet. */
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-federal);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--color-fluoro);
+}
+
+/* One focus treatment everywhere, and it is loud on purpose: this is a keyboard
+   game, so keyboard users are the primary audience, not an accommodation. */
+:focus-visible {
+  outline: 2px solid var(--color-fluoro);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ controls */
+
+button {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  /* Offset block shadow, like an over-inked second impression. */
+  box-shadow: var(--shadow-press);
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    background 90ms ease;
+}
+
+button:hover {
+  background: var(--color-paper-deep);
+}
+
+button:active {
+  /* Pressed into the paper. */
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--color-ink);
+}
+
+button[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* ------------------------------------------------------------------- shared */
+
+.sheet {
+  width: min(80rem, 100% - 2.5rem);
+  margin-inline: auto;
+  padding-block: clamp(1.5rem, 4vw, 3rem);
+}
+
+/* A label set as a printer's registration mark: short, mono, with a rule that
+   runs to the end of the line. Used only where the label names a real section. */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-federal);
+  margin-bottom: 0.75rem;
+}
+
+.eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--color-federal) 35%, transparent);
+}
+
+.lede {
+  max-width: 46ch;
+  font-size: 1.0625rem;
+  color: color-mix(in srgb, var(--color-ink) 78%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

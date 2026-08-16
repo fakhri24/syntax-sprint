@@ -1,0 +1,51 @@
+{
+  "name": "syntax-sprint",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check:env": "tsx --env-file-if-exists=.env.local scripts/checkEnv.ts",
+    "seed:snippets": "tsx --env-file-if-exists=.env.local scripts/seedSnippets.ts",
+    "test:rules": "bash scripts/test-rules.sh",
+    "deploy:firestore": "tsx --env-file-if-exists=.env.local scripts/deployFirestore.ts",
+    "users": "tsx --env-file-if-exists=.env.local scripts/listUsers.ts"
+  },
+  "dependencies": {
+    "acorn": "^8.18.0",
+    "firebase": "^12.17.1",
+    "firebase-admin": "^14.2.0",
+    "magic-string": "^1.2.0",
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.5",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1",
+    "jsdom": "^30.0.1",
+    "shiki": "^4.4.3",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.12",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  }
+}

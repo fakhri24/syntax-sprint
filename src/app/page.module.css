@@ -1,0 +1,146 @@
+.masthead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.25rem;
+  border-bottom: var(--rule-strong);
+}
+
+/* The one place the riso metaphor is stated outright: the title is printed
+   twice, the blue plate slightly out of register behind the black. Spending the
+   boldness here keeps everything else quiet. */
+.wordmark {
+  position: relative;
+  isolation: isolate;
+}
+
+.wordmark::before {
+  content: attr(data-word);
+  position: absolute;
+  inset: 0;
+  color: var(--color-federal);
+  transform: translate(-4px, 3px);
+  mix-blend-mode: multiply;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.tagline {
+  margin-top: 1.75rem;
+  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+  max-width: 52ch;
+}
+
+.tagline em {
+  font-style: normal;
+  /* Sits below the baseline: any higher and it reads as a strikethrough. */
+  background: linear-gradient(transparent 82%, var(--color-fluoro) 82%);
+  padding-bottom: 0.1em;
+}
+
+.levelSection {
+  margin-top: 2.5rem;
+}
+
+.levels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--rule);
+}
+
+/* Difficulty is a real progression, so the levels are numbered. The number is
+   information, not ornament. */
+.level {
+  border-bottom: var(--rule);
+}
+
+.levelLink {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding: 1.25rem 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background 120ms ease, padding-left 120ms ease;
+}
+
+.levelLink:hover,
+.levelLink:focus-visible {
+  background: var(--color-paper-deep);
+  padding-left: 1rem;
+  color: inherit;
+}
+
+.index {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-federal);
+  letter-spacing: 0.08em;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 600;
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.levelLink:hover .title {
+  color: var(--color-federal);
+}
+
+.meta {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+}
+
+.chip {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.chip[data-difficulty="hard"] {
+  border-color: var(--color-fluoro);
+  color: var(--color-fluoro);
+}
+
+.chip[data-difficulty="medium"] {
+  border-color: var(--color-federal);
+  color: var(--color-federal);
+}
+
+.chip[data-difficulty="easy"] {
+  border-color: var(--color-riso-green);
+  color: var(--color-riso-green);
+}
+
+.footer {
+  margin-top: 2.5rem;
+  display: flex;
+  gap: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 40rem) {
+  .levelLink {
+    grid-template-columns: 2.5rem 1fr;
+    row-gap: 0.5rem;
+  }
+
+  .meta {
+    grid-column: 2;
+  }
+}
