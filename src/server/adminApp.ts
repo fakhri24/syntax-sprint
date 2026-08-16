@@ -18,6 +18,17 @@ function requireEnv(name: string): string {
   return value;
 }
 
+function formatPrivateKey(rawKey: string): string {
+  let cleaned = rawKey.trim();
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'"))
+  ) {
+    cleaned = cleaned.slice(1, -1);
+  }
+  return cleaned.replace(/\\n/g, "\n");
+}
+
 export function getAdminApp(): App {
   const existing = getApps();
   if (existing.length) return existing[0];
@@ -26,8 +37,7 @@ export function getAdminApp(): App {
     credential: cert({
       projectId: requireEnv("FIREBASE_ADMIN_PROJECT_ID"),
       clientEmail: requireEnv("FIREBASE_ADMIN_CLIENT_EMAIL"),
-      // Vercel/Netlify store the key with literal \n sequences.
-      privateKey: requireEnv("FIREBASE_ADMIN_PRIVATE_KEY").replace(/\\n/g, "\n"),
+      privateKey: formatPrivateKey(requireEnv("FIREBASE_ADMIN_PRIVATE_KEY")),
     }),
   });
 }
