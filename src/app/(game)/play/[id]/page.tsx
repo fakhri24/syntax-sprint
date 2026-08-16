@@ -15,7 +15,11 @@ export const dynamic = "force-dynamic";
  * tokens in the first paint — a typing game that shows an empty box while it
  * fetches has already lost the player's first second.
  */
-export default async function PlayPage({ params }: PageProps<"/play/[id]">) {
+interface PlayPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function PlayPage({ params }: PlayPageProps) {
   const { id } = await params;
 
   const snapshot = await getAdminDb().collection(SNIPPETS).doc(id).get();
