@@ -3,6 +3,8 @@
 /** Per-character render state in the editor viewport (§4.11). */
 export type CharState =
   | "pending"
+  /** The one character the caret is sitting on: the next key to press. */
+  | "current"
   | "typed"
   | "error"
   /** Auto-skipped leading whitespace: visible, dimmed, never scored (§4.2). */

@@ -21,10 +21,10 @@ describe("initialCharStates", () => {
 describe("diffCharStates", () => {
   const { skipMask } = buildLayout(CSS);
 
-  it("marks the character just passed as typed and the new one as pending", () => {
+  it("marks the character just passed as typed and the new one as current", () => {
     expect(diffCharStates({ cursorIndex: 0, hasError: false }, { cursorIndex: 1, hasError: false }, skipMask)).toEqual([
       { index: 0, state: "typed" },
-      { index: 1, state: "pending" },
+      { index: 1, state: "current" },
     ]);
   });
 
@@ -41,7 +41,7 @@ describe("diffCharStates", () => {
 
     expect(mutations).toEqual([
       { index: 1, state: "typed" }, // the newline itself was typed
-      { index: 6, state: "pending" },
+      { index: 6, state: "current" },
     ]);
   });
 
@@ -53,7 +53,7 @@ describe("diffCharStates", () => {
 
   it("clears the error in place when Backspace unlocks", () => {
     expect(diffCharStates({ cursorIndex: 2, hasError: true }, { cursorIndex: 2, hasError: false }, skipMask)).toEqual([
-      { index: 2, state: "pending" },
+      { index: 2, state: "current" },
     ]);
   });
 

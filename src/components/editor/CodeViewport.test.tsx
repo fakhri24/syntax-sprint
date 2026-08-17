@@ -57,7 +57,7 @@ describe("CodeViewport", () => {
 
     expect(chars()[0]).toBe("typed");
     expect(chars()[1]).toBe("typed");
-    expect(chars()[2]).toBe("pending");
+    expect(chars()[2]).toBe("current");
     // Same node instance: the snippet DOM was built once (§4.11).
     expect(container.querySelector('[data-index="0"]')).toBe(before);
   });
@@ -68,7 +68,15 @@ describe("CodeViewport", () => {
     expect(chars()[layout.startIndex]).toBe("error");
 
     rerender(<CodeViewport {...props} hasError={false} errorNonce={1} />);
-    expect(chars()[layout.startIndex]).toBe("pending");
+    expect(chars()[layout.startIndex]).toBe("current");
+  });
+
+  it("marks the starting character current at mount, not just after the first keystroke", () => {
+    // The spans are built from skipMask alone and the diff is empty while the
+    // cursor has not moved, so without an explicit mark the first character
+    // would render as pending underneath the caret block — unreadable.
+    const { chars } = renderViewport();
+    expect(chars()[layout.startIndex]).toBe("current");
   });
 
   it("keeps indentation skipped when Enter jumps over it", () => {
@@ -89,7 +97,7 @@ describe("CodeViewport", () => {
     const states = Array.from(container.querySelectorAll<HTMLElement>("[data-index]")).map(
       (n) => n.dataset.state,
     );
-    expect(states).toEqual(["pending", "typed", "skipped", "skipped", "skipped", "skipped", "pending"]);
+    expect(states).toEqual(["pending", "typed", "skipped", "skipped", "skipped", "skipped", "current"]);
   });
 
   it("flags the caret while locked", () => {

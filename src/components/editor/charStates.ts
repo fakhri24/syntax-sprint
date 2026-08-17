@@ -43,9 +43,11 @@ export function diffCharStates(
   const cursorMoved = previous.cursorIndex !== next.cursorIndex;
   const errorChanged = previous.hasError !== next.hasError;
 
-  // The character under the cursor is the only one that carries the error state.
+  // The character under the cursor is the only one that carries the error state,
+  // and the only one marked `current` — pending is what it reverts to once the
+  // caret has moved on, which the loop above handles by printing it.
   if ((cursorMoved || errorChanged) && next.cursorIndex < skipMask.length) {
-    mutations.push({ index: next.cursorIndex, state: next.hasError ? "error" : "pending" });
+    mutations.push({ index: next.cursorIndex, state: next.hasError ? "error" : "current" });
   }
 
   return mutations;

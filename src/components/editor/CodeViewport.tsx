@@ -101,6 +101,12 @@ export default function CodeViewport({
     measure();
     moveCaret(cursorIndex);
 
+    // The spans are built from skipMask alone, which knows nothing about the
+    // cursor, and the diff below emits nothing while previous and next match.
+    // So the very first character has to be marked here or it would sit under
+    // the caret still styled as pending — invisible against the block.
+    charRefs.current[cursorIndex]?.setAttribute("data-state", hasError ? "error" : "current");
+
     const container = containerRef.current;
     if (!container || typeof ResizeObserver === "undefined") return;
 

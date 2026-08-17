@@ -20,6 +20,10 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow-press);
   overflow-x: auto;
+
+  /* Makes this the stacking context the caret's negative z-index resolves
+     against, so it lands behind the glyphs but still above this background. */
+  isolation: isolate;
 }
 
 /* The stock the page is printed on: a hairline margin rule, like a legal pad. */
@@ -45,6 +49,14 @@
   color: var(--color-ghost);
 }
 
+/* The next key to press. Reversed out of the caret block rather than tinted by
+   it: paper on federal is the loudest pairing the palette has, which is what
+   this one character has to be. */
+.char[data-state="current"] {
+  color: var(--color-paper);
+  font-weight: 600;
+}
+
 /* Printed. Full ink, and the token colour finally shows. */
 .char[data-state="typed"] {
   color: var(--tok-light, var(--color-ink));
@@ -66,14 +78,19 @@
 }
 
 /* A block caret, one character cell wide: the press head sitting over the next
-   cell to print, rather than a hairline between two of them. */
+   cell to print, rather than a hairline between two of them.
+
+   It sits *behind* the glyph. Painted on top it hid the very character it is
+   pointing at — a filled block multiplied over pale ghost ink leaves the letter
+   and the block within a hair of the same navy, so the one thing the player
+   needs to read was the one thing they could not. */
 .caret {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: -1;
   width: var(--cell);
   background: var(--color-federal);
-  mix-blend-mode: multiply;
   will-change: transform;
   transition: transform 70ms cubic-bezier(0.2, 0.8, 0.3, 1);
   pointer-events: none;
