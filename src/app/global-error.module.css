@@ -1,0 +1,82 @@
+/* The last-resort screen. Everything here is build-time — no imports that could
+   themselves be the thing that broke. */
+
+/* Children stretch by default so `.eyebrow` spans the column and its trailing
+   rule reaches the end of the line, the way it does everywhere else. Anything
+   that must stay fit-content opts out with align-self. */
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+  max-width: 44rem;
+}
+
+/* The digest is the only string that ties this screen to a line in the server
+   log, so it is set as a physical object rather than as fine print. */
+.digest {
+  /* A pressed chip, not a banner — it stays the width of the token it carries. */
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--color-paper-deep);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-press);
+}
+
+.digestLabel {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-federal);
+}
+
+.digestValue {
+  /* One click selects the whole token, because it exists to be pasted. */
+  user-select: all;
+}
+
+.hint {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+}
+
+/* Development only: in production Next redacts the message, so this block is
+   dead weight there and never renders. */
+.trace {
+  width: 100%;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-paper);
+  background: var(--color-ink);
+  border-radius: var(--radius);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.homeLink {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
