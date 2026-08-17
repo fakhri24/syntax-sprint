@@ -17,6 +17,12 @@
     "deploy:firestore": "tsx --env-file-if-exists=.env.local scripts/deployFirestore.ts",
     "users": "tsx --env-file-if-exists=.env.local scripts/listUsers.ts"
   },
+  "comments": {
+    "overrides.jose": "jwks-rsa (via firebase-admin) does require('jose') but declares jose ^6, which is ESM-only — that throws ERR_REQUIRE_ESM on Vercel and kills every route importing firebase-admin/auth. jose 5 ships CJS. Drop this once jwks-rsa loads jose in a CJS-compatible way."
+  },
+  "overrides": {
+    "jose": "^5.10.0"
+  },
   "dependencies": {
     "acorn": "^8.18.0",
     "firebase": "^12.17.1",
