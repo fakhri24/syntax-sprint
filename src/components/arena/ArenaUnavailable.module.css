@@ -1,0 +1,87 @@
+/* Same card geometry as the keyboard gate, because this is the same kind of
+   screen: an explanation standing in for the arena rather than a broken arena.
+   The accent shifts from fluoro to ink — that one redirects a player who can
+   still play, this one reports a failure. */
+.panel {
+  width: min(34rem, 100% - 3rem);
+  margin: clamp(3rem, 12vh, 8rem) auto;
+  padding: 2rem;
+  background: var(--color-paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+
+.body {
+  margin-top: 1.25rem;
+  display: grid;
+  justify-items: start;
+  gap: 1.125rem;
+}
+
+.reference {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--color-paper-deep);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+}
+
+.referenceLabel {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-federal);
+}
+
+.referenceValue {
+  /* One click selects the whole token, because it exists to be pasted. */
+  user-select: all;
+}
+
+.footnote {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--color-ink) 62%, transparent);
+}
+
+.actions {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+/* Given the pressed-block treatment buttons get, so it reads as the thing to
+   do even though it is only a navigation. */
+.retry {
+  padding: 0.5rem 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-decoration: none;
+  background: var(--color-paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-press);
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    background 90ms ease;
+}
+
+.retry:hover {
+  color: var(--color-ink);
+  background: var(--color-paper-deep);
+}
+
+.retry:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--color-ink);
+}
